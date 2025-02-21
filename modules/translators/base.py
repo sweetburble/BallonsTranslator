@@ -70,7 +70,6 @@ def check_language_support(check_type: str = 'source'):
 
 
 class BaseTranslator(BaseModule):
-
     concate_text = True
     cht_require_convert = False
 
