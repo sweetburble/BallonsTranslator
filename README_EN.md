@@ -54,82 +54,8 @@ $ python3 launch.py --update
 Note the first time you launch it will install the required libraries and download models automatically. If the downloads fail, you will need to download the **data** folder (or missing files mentioned in the terminal) from [MEGA](https://mega.nz/folder/gmhmACoD#dkVlZ2nphOkU5-2ACb5dKw) or [Google Drive](https://drive.google.com/drive/folders/1uElIYRLNakJj-YS0Kd3r3HE-wzeEvrWd?usp=sharing) and save it to the corresponding path in source code folder.
 
 ## Build macOS application (compatible with both intel and apple silicon chips)
-<i>Note macOS can also run the source code if it didn't work.</i>  
-
-![录屏2023-09-11 14 26 49](https://github.com/hyrulelinks/BallonsTranslator/assets/134026642/647c0fa0-ed37-49d6-bbf4-8a8697bc873e)
-
-#### 1. Preparation
--   Download libs and models from [MEGA](https://mega.nz/folder/gmhmACoD#dkVlZ2nphOkU5-2ACb5dKw "MEGA") or [Google Drive](https://drive.google.com/drive/folders/1uElIYRLNakJj-YS0Kd3r3HE-wzeEvrWd?usp=sharing)
-
-
-<img width="1268" alt="截屏2023-09-08 13 44 55_7g32SMgxIf" src="https://github.com/dmMaze/BallonsTranslator/assets/134026642/40fbb9b8-a788-4a6e-8e69-0248abaee21a">
-
--  Put all the downloaded resources into a folder called data, the final directory tree structure should look like:
-
-```
-data
-├── libs
-│   └── patchmatch_inpaint.dll
-└── models
-    ├── aot_inpainter.ckpt
-    ├── comictextdetector.pt
-    ├── comictextdetector.pt.onnx
-    ├── lama_mpe.ckpt
-    ├── manga-ocr-base
-    │   ├── README.md
-    │   ├── config.json
-    │   ├── preprocessor_config.json
-    │   ├── pytorch_model.bin
-    │   ├── special_tokens_map.json
-    │   ├── tokenizer_config.json
-    │   └── vocab.txt
-    ├── mit32px_ocr.ckpt
-    ├── mit48pxctc_ocr.ckpt
-    └── pkuseg
-        ├── postag
-        │   ├── features.pkl
-        │   └── weights.npz
-        ├── postag.zip
-        └── spacy_ontonotes
-            ├── features.msgpack
-            └── weights.npz
-
-7 directories, 23 files
-```
-
--  Install pyenv command line tool for managing Python versions. Recommend installing via Homebrew.
-```
-# Install via Homebrew
-brew install pyenv
-
-# Install via official script
-curl https://pyenv.run | bash
-
-# Set shell environment after install
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
-echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
-echo 'eval "$(pyenv init -)"' >> ~/.zshrc
-```
-
-
-#### 2、Build the application
-```
-# Enter the `data` working directory
-cd data
-
-# Clone the `dev` branch of the repo
-git clone -b dev https://github.com/dmMaze/BallonsTranslator.git
-
-# Enter the `BallonsTranslator` working directory
-cd BallonsTranslator
-
-# Run the build script, will ask for password at pyinstaller step, enter password and press enter
-sh scripts/build-macos-app.sh
-```
-> 📌The packaged app is at ./data/BallonsTranslator/dist/BallonsTranslator.app, drag the app to macOS application folder to install. Ready to use out of box without extra Python config.
-
-
-</details> 
+[Reference](doc/macOS_app.md)  
+Some issues may occur, running the source code directly is the recommended way for now.
 
 # Usage
 
@@ -227,23 +153,8 @@ This project is heavily dependent upon [manga-image-translator](https://github.c
   * All lama* are finetuned using [LaMa](https://github.com/advimman/lama)
   * PatchMatch is an algorithm from [PyPatchMatch](https://github.com/vacancy/PyPatchMatch), this program uses a [modified version](https://github.com/dmMaze/PyPatchMatchInpaint) by me. 
   
-
 ## Translators
-Available translators: Google, DeepL, ChatGPT, Sugoi, Caiyun, Baidu. Papago, and Yandex.
- * Google shuts down translate service in China, please set corresponding 'url' in config panel to *.com.
- * [Caiyun](https://dashboard.caiyunapp.com/), [ChatGPT](https://platform.openai.com/playground), [Yandex](https://yandex.com/dev/translate/), [Baidu](http://developers.baidu.com/), and [DeepL](https://www.deepl.com/docs-api/api-access) translators needs to require a token or api key.
- * DeepL & Sugoi translator (and it's CT2 Translation conversion) thanks to [Snowad14](https://github.com/Snowad14).
- * Sugoi translates Japanese to English completely offline. Download [offline model](https://drive.google.com/drive/folders/1KnDlfUM9zbnYFTo6iCbnBaBKabXfnVJm), move "sugoi_translator" into the BallonsTranslator/ballontranslator/data/models. 
- * [Sakura-13B-Galgame](https://github.com/SakuraLLM/Sakura-13B-Galgame), check ```low vram mode``` in config panel if you\'re running it locally on a single device and encountered a crash due to vram OOM (enabled by default).
- * DeepLX: Please refer to [Vercel](https://github.com/bropines/Deeplx-vercel) or [deeplx](https://github.com/OwO-Network/DeepLX)
- * Added the [Translators](https://github.com/UlionTse/translators) library, which supports access to some translator services without api keys. You can find out about supported services [here](https://github.com/UlionTse/translators#supported-translation-services).
- * Supports two versions of OpenAI-compliant translators that work with official or third-party LLM providers compatible with the OpenAI API, requiring configuration in the settings panel.
-    * The non-suffix version consumes fewer tokens but has slightly weaker sentence splitting stability, which may cause issues with long text translations.
-    * The 'exp' suffix version uses more tokens, but has better stability and includes "jailbreaking" in the Prompt, making it suitable for long text translations.
-
-For other good offline English translators, please refer to this [thread](https://github.com/dmMaze/BallonsTranslator/discussions/515).  
-To add a new translator, please reference [how_to_add_new_translator](doc/how_to_add_new_translator.md), it is simple as subclass a BaseClass and implementing two interfaces, then you can use it in the application, you are welcome to contribute to the project.  
-
+* **You can find information about Translators modules [here.](doc/modules/translators.md)**
 
 ## FAQ & Misc
 * If your computer has an Nvidia GPU or Apple silicon, the program will enable hardware acceleration. 
