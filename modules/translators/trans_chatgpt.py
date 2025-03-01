@@ -48,7 +48,7 @@ class GPTTranslator(BaseTranslator):
         'chat sample': {
             'type': 'editor',
             'value': 
-'''日本語-简体中文:
+'''日本語-한국어:
     source:
         - 二人のちゅーを 目撃した ぼっちちゃん
         - ふたりさん
@@ -57,12 +57,12 @@ class GPTTranslator(BaseTranslator):
         - 喜多ちゃんとは どどど どういった ご関係なのでしようか...
         - テレビで見た！
     target:
-        - 小孤独目击了两人的接吻
-        - 二里酱
-        - 我听说人们会把亲吻作为与喜爱的朋友打招呼的方式
-        - 我给了她冰激凌
-        - 喜多酱和你是怎么样的关系啊...
-        - 我在电视上看到的！'''
+        - 둘의 키스를 목격한 혼자 있는 아이
+        - 두 분
+        - 좋아하는 친구에게는 인사 대신에 뽀뽀를 한다고 해.
+        - 아이스크림을 줬어.
+        - 키타 쨩과는 어떤 관계일까요...
+        - 텔레비전에서 봤어!'''
         },
         'invalid repeat count': 2,
         'max requests per minute': 20,

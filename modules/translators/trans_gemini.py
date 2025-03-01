@@ -24,7 +24,7 @@ class GeminiTranslator(BaseTranslator):
             'options': [
                 'gemini-1.5-flash',
                 'gemini-2.0-flash',
-                'gemini-2.0-flash-lite-preview-02-05',
+                'gemini-2.0-flash-lite',
             ],
             'value': 'gemini-2.0-flash'
         },
@@ -146,8 +146,6 @@ class GeminiTranslator(BaseTranslator):
     
     @property
     def chat_sample(self):
-        if self.model == 'gpt3':
-            return None
 
         samples = self.params['chat sample']['value']
         try: 
@@ -207,20 +205,7 @@ class GeminiTranslator(BaseTranslator):
         yield prompt.lstrip(), num_src
 
     def _format_prompt_log(self, to_lang: str, prompt: str) -> str:
-        chat_sample = self.chat_sample
-        if self.model != 'gpt3' and chat_sample is not None:
-            return '\n'.join([
-                'System:',
-                self.chat_system_template,
-                'User:',
-                chat_sample[0],
-                'Assistant:',
-                chat_sample[1],
-                'User:',
-                prompt,
-            ])
-        else:
-            return '\n'.join([
+        return '\n'.join([
                 'System:',
                 self.chat_system_template,
                 'User:',
@@ -266,7 +251,6 @@ class GeminiTranslator(BaseTranslator):
                     self.logger.warning(f'Translation failed due to {e}. Attempt: {retry_attempt}, sleep for {self.retry_timeout} secs...')
                     self.logger.error(f'Request traceback: %s', traceback.format_exc()) # 변경: TypeError 해결을 위해 format string 변경
                     time.sleep(self.retry_timeout)
-                    # time.sleep(self.retry_timeout)
             # if return_prompt:
             #     new_translations = new_translations[:-1]
 
