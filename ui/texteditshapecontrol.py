@@ -5,7 +5,6 @@ from qtpy.QtWidgets import QGraphicsPixmapItem, QGraphicsItem, QWidget, QGraphic
 from qtpy.QtCore import Qt, QRect, QRectF, QPointF, QPoint
 from qtpy.QtGui import QPainter, QPen, QColor
 from utils.imgproc_utils import xywh2xyxypoly, rotate_polygons
-from typing import List, Union, Tuple
 
 from .cursor import rotateCursorList, resizeCursorList
 from .textitem import TextBlkItem

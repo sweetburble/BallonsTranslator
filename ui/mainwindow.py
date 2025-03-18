@@ -19,7 +19,7 @@ from utils import create_error_dialog, create_info_dialog
 from modules.translators.trans_chatgpt import GPTTranslator
 from .misc import parse_stylesheet, set_html_family, QKEY
 from utils.config import ProgramConfig, pcfg, save_config, text_styles, save_text_styles, load_textstyle_from, FontFormat
-from .config_proj import ProjImgTrans
+from utils.proj_imgtrans import ProjImgTrans
 from .canvas import Canvas
 from .configpanel import ConfigPanel
 from .module_manager import ModuleManager
@@ -134,7 +134,7 @@ class MainWindow(mainwindow_cls):
         self.leftBar.globalSearchChecker.clicked.connect(self.on_set_gsearch_widget)
         self.leftBar.open_dir.connect(self.OpenProj)
         self.leftBar.open_json_proj.connect(self.openJsonProj)
-        self.leftBar.save_proj.connect(self.save_proj)
+        self.leftBar.save_proj.connect(self.manual_save)
         self.leftBar.export_doc.connect(self.on_export_doc)
         self.leftBar.import_doc.connect(self.on_import_doc)
         self.leftBar.export_src_txt.connect(lambda : self.on_export_txt(dump_target='source'))
@@ -484,7 +484,7 @@ class MainWindow(mainwindow_cls):
         self.canvas.alt_pressed = False
         self.canvas.scale_tool_mode = False
 
-    def conditional_manual_save(self):
+    def conditional_save(self):
         if self.canvas.projstate_unsaved and not self.opening_dir:
             update_scene_text = save_proj = self.canvas.text_change_unsaved()
             save_rst_only = not self.canvas.draw_change_unsaved()
@@ -498,7 +498,7 @@ class MainWindow(mainwindow_cls):
         self.page_changing = True
         if item is not None:
             if self.save_on_page_changed:
-                self.conditional_manual_save()
+                self.conditional_save()
             self.imgtrans_proj.set_current_img(item.text())
             self.canvas.clear_undostack(update_saved_step=True)
             self.canvas.updateCanvas()
@@ -790,10 +790,11 @@ class MainWindow(mainwindow_cls):
         pcfg.imgtrans_textblock = mode
         self.st_manager.showTextblkItemRect(mode)
 
-    def save_proj(self):
+    def manual_save(self):
         if self.leftBar.imgTransChecker.isChecked()\
             and self.imgtrans_proj.directory is not None:
-            self.conditional_manual_save()
+            LOGGER.debug('Manually saving...')
+            self.saveCurrentPage(update_scene_text=True, save_proj=True, restore_interface=True, save_rst_only=False)
 
     def saveCurrentPage(self, update_scene_text=True, save_proj=True, restore_interface=False, save_rst_only=False):
         
@@ -1110,7 +1111,7 @@ class MainWindow(mainwindow_cls):
             self.set_display_lang(lang)
 
     def run_imgtrans(self):
-        if not self.imgtrans_proj.is_all_pages_no_text:
+        if not self.imgtrans_proj.is_all_pages_no_text and not pcfg.module.keep_exist_textlines:
             reply = QMessageBox.question(self, self.tr('Confirmation'),
                                          self.tr('Are you sure to run image translation again?\nAll existing translation results will be cleared!'),
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1132,7 +1133,8 @@ class MainWindow(mainwindow_cls):
         all_disabled = pcfg.module.all_stages_disabled()
         if pcfg.module.enable_detect:
             for page in self.imgtrans_proj.pages:
-                self.imgtrans_proj.pages[page].clear()
+                if not pcfg.module.keep_exist_textlines:
+                    self.imgtrans_proj.pages[page].clear()
         else:
             self.st_manager.updateTextBlkList()
             textblk: TextBlock = None

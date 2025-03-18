@@ -12,7 +12,6 @@ except:
     from qtpy.QtGui import QUndoStack, QUndoCommand
 
 from .misc import ndarray2pixmap, QKEY, QNUMERIC_KEYS, ARROWKEY2DIRECTION
-from .config_proj import ProjImgTrans
 from .textitem import TextBlkItem, TextBlock
 from .texteditshapecontrol import TextBlkShapeControl
 from .custom_widget import ScrollBar, FadeLabel
@@ -20,6 +19,7 @@ from .image_edit import ImageEditMode, DrawingLayer, StrokeImgItem
 from .page_search_widget import PageSearchWidget
 from utils import shared as C
 from utils.config import pcfg
+from utils.proj_imgtrans import ProjImgTrans
 
 CANVAS_SCALE_MAX = 10.0
 CANVAS_SCALE_MIN = 0.01
@@ -360,8 +360,11 @@ class Canvas(QGraphicsScene):
 
         self.clearSelection()
         if self.textEditMode() and self.txtblkShapeControl.blk_item is not None:
-            if self.txtblkShapeControl.blk_item.is_editting():
-                self.txtblkShapeControl.blk_item.endEdit()
+            blk_item = self.txtblkShapeControl.blk_item
+            if blk_item.is_editting():
+                blk_item.endEdit(keep_focus=False)
+            if blk_item.isSelected():
+                blk_item.setSelected(False)
 
         result = ndarray2pixmap(self.imgtrans_proj.inpainted_array, return_qimg=True)
         canvas_sz = self.img_window_size()
