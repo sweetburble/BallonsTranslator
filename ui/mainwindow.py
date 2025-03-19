@@ -281,7 +281,6 @@ class MainWindow(mainwindow_cls):
         module_manager.page_trans_finished.connect(self.on_pagtrans_finished)
         module_manager.setupThread(self.configPanel, self.imgtrans_progress_msgbox, self.ocr_postprocess, self.translate_preprocess, self.translate_postprocess)
         module_manager.progress_msgbox.showed.connect(self.on_imgtrans_progressbox_showed)
-        module_manager.imgtrans_thread.mask_postprocess = self.drawingPanel.rectPanel.post_process_mask
         module_manager.blktrans_pipeline_finished.connect(self.on_blktrans_finished)
         module_manager.imgtrans_thread.post_process_mask = self.drawingPanel.rectPanel.post_process_mask
 
