@@ -6,16 +6,10 @@ import torch
 import numpy as np
 import cv2
 
-from utils.proj_imgtrans import ProjImgTrans
-
-from .detector_ctd import ComicTextDetector
 from .base import register_textdetectors, TextDetectorBase, TextBlock, DEVICE_SELECTOR
-from utils import create_error_dialog, create_info_dialog
 from utils.textblock import mit_merge_textlines
 from utils.imgproc_utils import xywh2xyxypoly
-
-
-
+from utils.proj_imgtrans import ProjImgTrans
 
 MODEL_DIR = 'data/models'
 CKPT_LIST = []
@@ -40,7 +34,7 @@ CLS_MAP = {
 
 
 @register_textdetectors('ysgyolo')
-class ESGYoloDetector(TextDetectorBase):
+class YSGYoloDetector(TextDetectorBase):
 
     update_ckpt_list()
     params = {
