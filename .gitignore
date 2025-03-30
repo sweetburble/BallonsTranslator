@@ -43,6 +43,9 @@ localtmp*
 venv
 pip
 .DS_Store
+*.dic
+*.aff
+*.exc
 
 fonts/*
 !fonts/put fonts here.txt
@@ -57,6 +60,7 @@ launch_win_venv.bat
 install_venv.bat
 install-BT.cmd
 download_models.bat
+Ultralytics/settings.json
 modules/translators/sys_prompt.py
 temp
 테스트 결과.txt
