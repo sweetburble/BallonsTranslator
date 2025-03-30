@@ -274,8 +274,15 @@ class GeminiTranslator(BaseTranslator):
         contents = []
         if chat_sample is not None:
             contents.append({'role': 'user', 'parts': [chat_sample[0]]})
-            contents.append({'role': 'model', 'parts': [chat_sample[1]]})  # 'model'로 변경
+            contents.append({'role': 'model', 'parts': [chat_sample[1]]})
+        
+        # 사용자 프롬프트 추가
         contents.append({'role': 'user', 'parts': [prompt]})
+
+        # 프리필 추가 - 사용자 프롬프트 이후에 모델 응답 시작 부분 설정
+        prefill_text = get_prefill()  # sys_prompt 모듈에서 가져오는 함수
+        if prefill_text:
+            contents.append({'role': 'model', 'parts': [{'text': prefill_text}]})
 
         generation_config = {
             'temperature': self.temperature,

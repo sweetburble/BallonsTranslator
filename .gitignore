@@ -58,3 +58,5 @@ install_venv.bat
 install-BT.cmd
 download_models.bat
 modules/translators/sys_prompt.py
+temp
+테스트 결과.txt
