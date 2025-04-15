@@ -28,10 +28,6 @@ class GPTTranslator(BaseTranslator):
             'type': 'selector',
             'options': [
                 'gpt-4o',
-                'gpt-4-turbo',
-                'gpt3',
-                'gpt35-turbo',
-                'gpt4',
             ],
             'value': 'gpt-4o'
         },
@@ -142,9 +138,6 @@ class GPTTranslator(BaseTranslator):
     
     @property
     def chat_sample(self):
-        if self.model == 'gpt3':
-            return None
-
         samples = self.params['chat sample']['value']
         try: 
             samples = yaml.load(self.params['chat sample']['value'], Loader=yaml.FullLoader)
@@ -204,7 +197,7 @@ class GPTTranslator(BaseTranslator):
 
     def _format_prompt_log(self, to_lang: str, prompt: str) -> str:
         chat_sample = self.chat_sample
-        if self.model != 'gpt3' and chat_sample is not None:
+        if chat_sample is not None:
             return '\n'.join([
                 'System:',
                 self.chat_system_template,
@@ -276,32 +269,7 @@ class GPTTranslator(BaseTranslator):
 
         return translations
 
-    def _request_translation_gpt3(self, prompt: str) -> str:
 
-        if OPENAPI_V1_API:
-            openai_completions_create = openai.completions.create
-        else:
-            openai_completions_create = openai.Completion.create
-
-        response = openai_completions_create(
-            model='text-davinci-003',
-            prompt=prompt,
-            max_tokens=self.max_tokens // 2, # Assuming that half of the tokens are used for the query
-            temperature=self.temperature,
-            top_p=self.top_p,
-            frequency_penalty=float(self.params['frequency penalty']),
-            presence_penalty=float(self.params['presence penalty'])
-        )
-
-        if OPENAPI_V1_API:
-            if response.usage is not None:
-                self.token_count += response.usage.total_tokens
-                self.token_count_last = response.usage.total_tokens
-        else:
-            self.token_count += response.usage['total_tokens']
-            self.token_count_last = response.usage['total_tokens']
-        return response.choices[0].text
-    
     def _request_translation_with_chat_sample(self, prompt: str, model: str, chat_sample: List) -> str:
         messages = [
             {'role': 'system', 'content': self.chat_system_template},
@@ -387,11 +355,5 @@ class GPTTranslator(BaseTranslator):
             model: str = override_model
         else:
             model:str = self.model
-            if model == 'gpt3':
-                return self._request_translation_gpt3(prompt)
-            elif model == 'gpt35-turbo':
-                model = 'gpt-3.5-turbo'
-            elif model == 'gpt4':
-                model = 'gpt-4'
 
         return self._request_translation_with_chat_sample(prompt, model, chat_sample)
