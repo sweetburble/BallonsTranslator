@@ -4,8 +4,8 @@ from typing import List, Dict, Union
 import yaml
 import traceback
 
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google import genai
+from google.genai import types
 
 from .base import BaseTranslator, register_translator
 
@@ -23,11 +23,11 @@ class GeminiTranslator(BaseTranslator):
         'model': {
             'type': 'selector',
             'options': [
-                'gemini-1.5-flash',
-                'gemini-2.0-flash',
                 'gemini-2.0-flash-lite',
+                'gemini-2.0-flash',
+                'gemini-2.5-flash-preview-04-17'
             ],
-            'value': 'gemini-2.0-flash'
+            'value': 'gemini-2.0-flash-lite'
         },
         'override model': '',
         'prompt template': {
@@ -236,7 +236,8 @@ class GeminiTranslator(BaseTranslator):
     def _request_translation(self, prompt, chat_sample: List):
         self.logger.debug(f'gemini prompt: \n {prompt}' )
 
-        genai.configure(api_key=self.params['api key'].strip())
+        # Gemini API 클라이언트 생성
+        client = genai.Client(api_key=self.params['api key'].strip())
         
         override_model = self.params['override model'].strip()
         if override_model != '':
@@ -248,50 +249,49 @@ class GeminiTranslator(BaseTranslator):
         source_lang = self.lang_map[self.lang_source]
         target_lang = self.lang_map[self.lang_target]
 
-        # 안전 설정 구성
-        safety_settings = [
-            {
-                "category": HarmCategory.HARM_CATEGORY_HARASSMENT,
-                "threshold": HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                "category": HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                "threshold": HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                "category": HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                "threshold": HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                "category": HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                "threshold": HarmBlockThreshold.BLOCK_NONE,
-            },
-        ]
-
-        model = genai.GenerativeModel(model_name, safety_settings=safety_settings, system_instruction=get_system_prompt(source_lang, target_lang))
+        # 모델 매개변수 설정
+        config = types.GenerateContentConfig(
+            safety_settings=[
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                ),
+            ],
+            system_instruction=get_system_prompt(source_lang, target_lang),
+            temperature=self.temperature,
+            top_p=self.top_p,
+            max_output_tokens=self.max_tokens // 2,
+            thinking_config=types.ThinkingConfig(thinking_budget=0) if model_name == 'gemini-2.5-flash-preview-04-17' else None,
+        )
 
         contents = []
         if chat_sample is not None:
-            contents.append({'role': 'user', 'parts': [chat_sample[0]]})
-            contents.append({'role': 'model', 'parts': [chat_sample[1]]})
-        
+            contents.append({'role': 'user', 'parts': [{'text': chat_sample[0]}]})
+            contents.append({'role': 'model', 'parts': [{'text': chat_sample[1]}]})
+
         # 사용자 프롬프트 추가
-        contents.append({'role': 'user', 'parts': [prompt]})
+        contents.append({'role': 'user', 'parts': [{'text': prompt}]})
 
         # 프리필 추가 - 사용자 프롬프트 이후에 모델 응답 시작 부분 설정
         prefill_text = get_prefill() # sys_prompt 모듈에서 가져오는 함수
         if prefill_text:
             contents.append({'role': 'model', 'parts': [{'text': prefill_text}]})
 
-        generation_config = {
-            'temperature': self.temperature,
-            'top_p': self.top_p,
-            'max_output_tokens': self.max_tokens // 2
-        }
-
         try:
-            response = model.generate_content(contents, generation_config=generation_config)
-            response.resolve()
+            response = client.models.generate_content(model=model_name, contents=contents, config=config)
+
             return response.text
         except Exception as e:
             self.logger.error(f"Gemini API request error: {e}")
