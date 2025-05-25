@@ -124,6 +124,11 @@ def imwrite(img_path, img, ext='.png', quality=100):
         encode_param = [cv2.IMWRITE_JPEG_QUALITY, quality]
     elif ext == '.webp':
         encode_param = [cv2.IMWRITE_WEBP_QUALITY, quality]
+    if len(img.shape) == 3:
+        if img.shape[-1] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        elif img.shape[-1] == 4:
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
     cv2.imencode(ext, img, encode_param)[1].tofile(img_path)
 
 
