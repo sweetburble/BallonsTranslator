@@ -206,17 +206,19 @@ def main():
 
     setup_logging(shared.LOGGING_PATH)
 
-    from modules.base import load_modules
-    from modules.prepare_local_files import prepare_local_files_forall
-    load_modules()
-    prepare_local_files_forall()
-
     app_args = sys.argv
     if args.headless:
         app_args = sys.argv + ['-platform', 'offscreen']
     app = QApplication(app_args)
     app.setApplicationName('BalloonsTranslator')
     app.setApplicationVersion(VERSION)
+
+    # import msl.loadlib (required by translators/trans_eztrans) before init QApplication
+    # yield QWindowsContext: OleInitialize() failed on py3.10, 
+    from modules.base import load_modules
+    from modules.prepare_local_files import prepare_local_files_forall
+    load_modules()
+    prepare_local_files_forall()
 
     if not args.headless:
         ps = QGuiApplication.primaryScreen()
