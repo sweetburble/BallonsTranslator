@@ -140,9 +140,7 @@ class LLM_OCR(OCRBase):
         "OAI: gpt-4-vision-preview",
         "OAI: gpt-4",
         "OAI: gpt-3.5-turbo",
-        "GGL: gemini-1.5-pro-latest",
-        "GGL: gemini-2.0-flash-exp",
-        "GGL: gemini-2.0-flash",
+        "GGL: gemini-2.5-flash",
     ]
 
     params = {
@@ -357,7 +355,7 @@ class LLM_OCR(OCRBase):
                     if provider == "OpenAI":
                         model_name = "gpt-4-vision-preview"
                     elif provider == "Google":
-                        model_name = "gemini-1.5-pro-latest"
+                        model_name = "gemini-2.5-flash-latest"
                     else:
                         model_name = "gpt-4-vision-preview"  # Default
 

@@ -23,13 +23,13 @@ class GeminiTranslator(BaseTranslator):
         'model': {
             'type': 'selector',
             'options': [
-                'gemini-2.0-flash-lite',
-                'gemini-2.0-flash',
-                'gemini-2.5-flash-preview-04-17'
+                'gemini-2.5-flash-lite-preview-06-17',
+                'gemini-2.5-flash',
+                'gemini-2.5-pro'
             ],
-            'value': 'gemini-2.0-flash-lite'
+            'value': 'gemini-2.5-flash-lite-preview-06-17'
         },
-        'override model': '',
+        'override model': '',   
         'prompt template': {
             'type': 'editor',
             'value': 'Please help me to translate the following text from a manga to {to_lang} (if it\'s already in {to_lang} or looks like gibberish you have to output it as it is instead):\n',
@@ -273,7 +273,7 @@ class GeminiTranslator(BaseTranslator):
             temperature=self.temperature,
             top_p=self.top_p,
             max_output_tokens=self.max_tokens // 2,
-            thinking_config=types.ThinkingConfig(thinking_budget=0) if model_name == 'gemini-2.5-flash-preview-04-17' else None,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         )
 
         contents = []

@@ -232,7 +232,7 @@ class DeepseekTranslator(BaseTranslator):
                     break
                 except InvalidNumTranslations:
                     retry_attempt += 1
-                    message = f'number of translations does not match to source:\nprompt:\n    {prompt}\ntranslations:\n  {new_translations}\ndeepseek response:\n  {response}' # 변경: gemini response -> deepseek response
+                    message = f'number of translations does not match to source:\nprompt:\n    {prompt}\ntranslations:\n  {new_translations}\ndeepseek response:\n  {response}'
                     if retry_attempt >= self.retry_attempts:
                         self.logger.error(message)
                         new_translations = [''] * num_src
