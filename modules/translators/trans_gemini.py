@@ -57,8 +57,8 @@ class GeminiTranslator(BaseTranslator):
         'max requests per minute': 20,
         'delay': 0.3,
         'max tokens': 4096,
-        'temperature': 0.5,
-        'top p': 1,
+        'temperature': 0.6,
+        'top p': 0.95,
         # 'return prompt': False,
         'retry attempts': 5,
         'retry timeout': 15,
@@ -112,7 +112,7 @@ class GeminiTranslator(BaseTranslator):
         return self.params['max tokens']
     
     @property
-    def top_p(self) -> int:
+    def top_p(self) -> float:
         return self.params['top p']
     
     @property
