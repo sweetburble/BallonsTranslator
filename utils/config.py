@@ -256,14 +256,17 @@ def json_dump_program_config(obj, **kwargs):
 def save_config():
     global pcfg
     try:
-        with open(shared.CONFIG_PATH, 'w', encoding='utf8') as f:
+        tmp_save_tgt = shared.CONFIG_PATH + '.tmp'
+        with open(tmp_save_tgt, 'w', encoding='utf8') as f:
             f.write(json_dump_program_config(pcfg))
-        LOGGER.info('Config saved')
-        return True
     except Exception as e:
-        LOGGER.error(f'Failed save config to {shared.CONFIG_PATH}: {e}')
+        LOGGER.error(f'Failed save config to {tmp_save_tgt}: {e}')
         LOGGER.error(traceback.format_exc())
         return False
+    
+    os.replace(tmp_save_tgt, shared.CONFIG_PATH)
+    LOGGER.info('Config saved')
+    return True
 
 def save_text_styles(raise_exception = False):
     global pcfg, text_styles
@@ -271,13 +274,17 @@ def save_text_styles(raise_exception = False):
         style_dir = osp.dirname(pcfg.text_styles_path)
         if not osp.exists(style_dir):
             os.makedirs(style_dir)
-        with open(pcfg.text_styles_path, 'w', encoding='utf8') as f:
+        tmp_save_tgt = pcfg.text_styles_path + '.tmp'
+        with open(tmp_save_tgt, 'w', encoding='utf8') as f:
             f.write(json_dump_nested_obj(text_styles))
-        LOGGER.info('Text style saved')
-        return True
+
     except Exception as e:
-        LOGGER.error(f'Failed save text style to {pcfg.text_styles_path}: {e}')
+        LOGGER.error(f'Failed save text style to {tmp_save_tgt}: {e}')
         LOGGER.error(traceback.format_exc())
         if raise_exception:
             raise e
         return False
+
+    os.replace(tmp_save_tgt, pcfg.text_styles_path)
+    LOGGER.info('Text style saved')
+    return True
