@@ -1,5 +1,6 @@
 from typing import List, Union, Tuple
 
+from colorama import init
 import numpy as np
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QLabel, QColorDialog, QMenu
 from qtpy.QtCore import  Qt, QPropertyAnimation, QEasingCurve, Signal
@@ -45,8 +46,9 @@ class ColorPickerLabel(QLabel):
     colorChanged = Signal(bool)
     apply_color = Signal(str, tuple)
     changingColor = Signal()
-    def __init__(self, parent=None, param_name='', *args, **kwargs):
+    def __init__(self, parent=None, param_name='', initial_black=False, *args, **kwargs):
         super().__init__(parent=parent, *args, **kwargs)
+        self.initial_black = QColor(0, 0, 0) if initial_black else QColor(255, 255, 255)
         self.color: QColor = None
         self.param_name = param_name
 
@@ -54,7 +56,7 @@ class ColorPickerLabel(QLabel):
         btn = event.button()
         if btn == Qt.MouseButton.LeftButton:
             self.changingColor.emit()
-            color = QColorDialog.getColor()
+            color = QColorDialog.getColor(self.initial_black)
             is_valid = color.isValid()
             if is_valid:
                 self.setPickerColor(color)

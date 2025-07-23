@@ -933,6 +933,7 @@ class TextBlkItem(QGraphicsTextItem):
             self.update()
 
     def setRelFontSize(self, value: float, repaint_background: bool = False, set_selected: bool = False, restore_cursor: bool = False, clip_size: bool = False, **kwargs):
+        MIN_FONT_SIZE = 14.0 # 최소 폰트 크기 (포인트 단위)
         self.layout.relayout_on_changed = False
         _, after_kwargs = self._before_set_ffmt(set_selected, restore_cursor)
         doc = self.document()
@@ -944,6 +945,8 @@ class TextBlkItem(QGraphicsTextItem):
                 fragment = it.fragment()
                 old_font_size = fragment.charFormat().fontPointSize()
                 new_font_size = round(old_font_size * value,2)
+                if new_font_size < MIN_FONT_SIZE:
+                    new_font_size = MIN_FONT_SIZE
                 cfmt = fragment.charFormat()
                 cfmt.setFontPointSize(new_font_size)
                 pos1 = fragment.position()
@@ -965,6 +968,9 @@ class TextBlkItem(QGraphicsTextItem):
         '''
         value should be point size
         '''
+        MIN_FONT_SIZE = 14.0 # 최소 폰트 크기 (포인트 단위)
+        if value < MIN_FONT_SIZE:
+            value = MIN_FONT_SIZE
         
         cursor, after_kwargs = self._before_set_ffmt(set_selected=set_selected, restore_cursor=restore_cursor)
         self.layout.relayout_on_changed = False

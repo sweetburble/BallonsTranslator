@@ -279,7 +279,7 @@ class FontFormatPanel(Widget):
         self.lineSpacingBox.setToolTip(self.tr("Change line spacing"))
         self.lineSpacingBox.param_changed.connect(self.on_param_changed)
         
-        self.colorPicker = ColorPickerLabel(self, param_name='frgb')
+        self.colorPicker = ColorPickerLabel(self, param_name='frgb', initial_black=True)
         self.colorPicker.setToolTip(self.tr("Change font color"))
         self.colorPicker.changingColor.connect(self.changingColor)
         self.colorPicker.colorChanged.connect(self.onColorLabelChanged)
@@ -296,7 +296,7 @@ class FontFormatPanel(Widget):
         self.verticalChecker.clicked.connect(lambda : self.on_param_changed('vertical', self.verticalChecker.isChecked()))
 
         self.strokeWidthBox = SizeComboBox([0, 10], 'stroke_width', self)
-        self.strokeWidthBox.addItems(["0.1"])
+        self.strokeWidthBox.addItems(["0.2"])
         self.strokeWidthBox.setToolTip(self.tr("Change stroke width"))
         self.strokeWidthBox.param_changed.connect(self.on_param_changed)
 
@@ -308,7 +308,7 @@ class FontFormatPanel(Widget):
         self.fontStrokeLabel.size_ctrl_changed.connect(self.strokeWidthBox.changeByDelta)
         self.fontStrokeLabel.btn_released.connect(lambda : self.on_param_changed('stroke_width', self.strokeWidthBox.value()))
         
-        self.strokeColorPicker = ColorPickerLabel(self, param_name='srgb')
+        self.strokeColorPicker = ColorPickerLabel(self, param_name='srgb', initial_black=False)
         self.strokeColorPicker.setToolTip(self.tr("Change stroke color"))
         self.strokeColorPicker.changingColor.connect(self.changingColor)
         self.strokeColorPicker.colorChanged.connect(self.onColorLabelChanged)
