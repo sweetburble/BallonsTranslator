@@ -21,7 +21,7 @@ class LLM_API_Translator(BaseTranslator):
     params: Dict = {
         "provider": {
             "type": "selector",
-            "options": ["OpenAI", "Google"],
+            "options": ["OpenAI", "Google", "Grok"],
             "value": "OpenAI",
             "description": "Select the LLM provider.",
         },
@@ -40,7 +40,11 @@ class LLM_API_Translator(BaseTranslator):
                 "OAI: gpt-4o",
                 "OAI: gpt-4-turbo",
                 "OAI: gpt-3.5-turbo",
+                "GGL: gemini-1.5-pro-latest",
+                "GGL: gemini-2.0-flash-exp",
                 "GGL: gemini-2.5-flash",
+                "XAI: grok-4",
+                "XAI: grok-3-mini",
             ],
             "value": "",
             "description": "Select the model. Provider prefix indicates the provider. Leave empty for provider default.",
@@ -193,8 +197,11 @@ class LLM_API_Translator(BaseTranslator):
         if not endpoint:
             if self.provider == "Google":
                 endpoint = "https://generativelanguage.googleapis.com/v1beta/openai"
-            else:
+            elif self.provider == "OpenAI":
                 endpoint = "https://api.openai.com/v1"
+            else:
+                endpoint = "https://api.x.ai/v1"
+                api_key_to_use = api_key_to_use.strip()  # only for XAI
 
         # Маскируем API ключ в логах – показываем только первые 6 символов
         masked_key = api_key_to_use[:6] + "*" * (len(api_key_to_use) - 6)
@@ -494,9 +501,11 @@ class LLM_API_Translator(BaseTranslator):
             "temperature": self.temperature,
             "top_p": self.top_p,
             "max_tokens": self.max_tokens // 2,
-            "frequency_penalty": float(self.params["frequency penalty"]["value"]),
-            "presence_penalty": float(self.params["presence penalty"]["value"]),
         }
+        # 如果是 grok/x.ai，不传 penalty 参数
+        if not (self.provider == "Grok" or (self.endpoint and "x.ai" in self.endpoint)):
+            func_args["frequency_penalty"] = float(self.params["frequency penalty"]["value"])
+            func_args["presence_penalty"] = float(self.params["presence penalty"]["value"])
 
         response = self.client.chat.completions.create(**func_args)
 
