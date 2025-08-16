@@ -116,31 +116,26 @@ if PADDLE_OCR_AVAILABLE:
                 "description": "Select the language for OCR",
             },
             "device": DEVICE_SELECTOR(),
-            "use_angle_cls": {
+            "use_textline_orientation": {
                 "type": "checkbox",
                 "value": False,
                 "description": "Enable angle classification for rotated text",
             },
             "ocr_version": {
                 "type": "selector",
-                "options": ["PP-OCRv4", "PP-OCRv3", "PP-OCRv2", "PP-OCR"],
-                "value": "PP-OCRv4",
+                "options": ["PP-OCRv5"],
+                "value": "PP-OCRv5",
                 "description": "Select the OCR model version",
             },
-            "enable_mkldnn": {
-                "type": "checkbox",
-                "value": False,
-                "description": "Enable MKL-DNN for CPU acceleration",
-            },
-            "det_limit_side_len": {
-                "value": 960,
+            "text_det_limit_side_len": {
+                "value": 240,
                 "description": "Maximum side length for text detection",
             },
-            "rec_batch_num": {
+            "text_recognition_batch_size": {
                 "value": 6,
                 "description": "Batch size for text recognition",
             },
-            "drop_score": {
+            "text_rec_score_thresh": {
                 "value": 0.5,
                 "description": "Confidence threshold for text recognition",
             },
@@ -164,12 +159,12 @@ if PADDLE_OCR_AVAILABLE:
             super().__init__(**params)
             self.language = self.params["language"]["value"]
             self.device = self.params["device"]["value"]
-            self.use_angle_cls = self.params["use_angle_cls"]["value"]
-            self.ocr_version = self.params["ocr_version"]["value"]
-            self.enable_mkldnn = self.params["enable_mkldnn"]["value"]
-            self.det_limit_side_len = self.params["det_limit_side_len"]["value"]
-            self.rec_batch_num = self.params["rec_batch_num"]["value"]
-            self.drop_score = self.params["drop_score"]["value"]
+            self.use_textline_orientation = self.params["use_textline_orientation"]["value"]
+            # self.ocr_version = self.params["ocr_version"]["value"]
+            self.ocr_version = "PP-OCRv5"
+            self.text_det_limit_side_len = self.params["text_det_limit_side_len"]["value"]
+            self.text_recognition_batch_size = self.params["text_recognition_batch_size"]["value"]
+            self.text_rec_score_thresh = self.params["text_rec_score_thresh"]["value"]
             self.text_case = self.params["text_case"]["value"]
             self.output_format = self.params["output_format"]["value"]
             self.model = None
@@ -194,23 +189,23 @@ if PADDLE_OCR_AVAILABLE:
                     f"Loading PaddleOCR model for language: {self.language} ({lang_code}), GPU: {use_gpu}"
                 )
             self.model = PaddleOCR(
-                use_angle_cls=self.use_angle_cls,
+                use_textline_orientation=self.use_textline_orientation,
                 lang=lang_code,
-                use_gpu=use_gpu,
+                # use_gpu=use_gpu,
+                # enable_mkldnn=self.enable_mkldnn,
+                text_rec_score_thresh=self.text_rec_score_thresh,
                 ocr_version=self.ocr_version,
-                enable_mkldnn=self.enable_mkldnn,
-                det_limit_side_len=self.det_limit_side_len,
-                rec_batch_num=self.rec_batch_num,
-                drop_score=self.drop_score,
-                det_model_dir=os.path.join(
+                text_det_limit_side_len=self.text_det_limit_side_len,
+                text_recognition_batch_size=self.text_recognition_batch_size,
+                text_detection_model_dir=os.path.join(
                     PADDLE_OCR_PATH, lang_code, self.ocr_version, "det"
                 ),
-                rec_model_dir=os.path.join(
+                text_recognition_model_dir=os.path.join(
                     PADDLE_OCR_PATH, lang_code, self.ocr_version, "rec"
                 ),
-                cls_model_dir=(
+                textline_orientation_model_dir=(
                     os.path.join(PADDLE_OCR_PATH, lang_code, self.ocr_version, "cls")
-                    if self.use_angle_cls
+                    if self.use_textline_orientation
                     else None
                 ),
             )
@@ -218,7 +213,7 @@ if PADDLE_OCR_AVAILABLE:
         def ocr_img(self, img: np.ndarray) -> str:
             if self.debug_mode:
                 self.logger.debug(f"Starting OCR for image size: {img.shape}")
-            result = self.model.ocr(img, det=True, rec=True, cls=self.use_angle_cls)
+            result = self.model.predict(img, )
             if self.debug_mode:
                 self.logger.debug(f"OCR recognition result: {result}")
             text = self._process_result(result)
@@ -233,8 +228,8 @@ if PADDLE_OCR_AVAILABLE:
                 if 0 <= x1 < x2 <= im_w and 0 <= y1 < y2 <= im_h:
                     cropped_img = img[y1:y2, x1:x2]
                     try:
-                        result = self.model.ocr(
-                            cropped_img, det=True, rec=True, cls=self.use_angle_cls
+                        result = self.model.predict(
+                            cropped_img
                         )
 
                         # Extract raw text from OCR result
@@ -371,21 +366,19 @@ if PADDLE_OCR_AVAILABLE:
             if param_key in [
                 "language",
                 "device",
-                "use_angle_cls",
+                "use_textline_orientation",
                 "ocr_version",
-                "enable_mkldnn",
-                "det_limit_side_len",
-                "rec_batch_num",
-                "drop_score",
+                "text_det_limit_side_len",
+                "text_recognition_batch_size",
+                "text_rec_score_thresh",
             ]:
                 self.language = self.params["language"]["value"]
                 self.device = self.params["device"]["value"]
-                self.use_angle_cls = self.params["use_angle_cls"]["value"]
+                self.use_textline_orientation = self.params["use_textline_orientation"]["value"]
                 self.ocr_version = self.params["ocr_version"]["value"]
-                self.enable_mkldnn = self.params["enable_mkldnn"]["value"]
-                self.det_limit_side_len = self.params["det_limit_side_len"]["value"]
-                self.rec_batch_num = self.params["rec_batch_num"]["value"]
-                self.drop_score = self.params["drop_score"]["value"]
+                self.text_det_limit_side_len = self.params["text_det_limit_side_len"]["value"]
+                self.text_recognition_batch_size = self.params["text_recognition_batch_size"]["value"]
+                self.text_rec_score_thresh = self.params["text_rec_score_thresh"]["value"]
                 self._load_model()
             elif param_key == "text_case":
                 self.text_case = self.params["text_case"]["value"]
