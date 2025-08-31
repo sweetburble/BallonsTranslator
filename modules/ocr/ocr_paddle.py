@@ -214,7 +214,7 @@ if PADDLE_OCR_AVAILABLE:
         def ocr_img(self, img: np.ndarray) -> str:
             if self.debug_mode:
                 self.logger.debug(f"Starting OCR for image size: {img.shape}")
-            result = self.model.predict(img, )
+            result = self.model.predict(img)
             if self.debug_mode:
                 self.logger.debug(f"OCR recognition result: {result}")
             text = self._process_result(result)
@@ -229,9 +229,7 @@ if PADDLE_OCR_AVAILABLE:
                 if 0 <= x1 < x2 <= im_w and 0 <= y1 < y2 <= im_h:
                     cropped_img = img[y1:y2, x1:x2]
                     try:
-                        result = self.model.predict(
-                            cropped_img
-                        )
+                        result = self.model.predict(cropped_img)
 
                         # Extract raw text from OCR result
                         raw_texts = []
