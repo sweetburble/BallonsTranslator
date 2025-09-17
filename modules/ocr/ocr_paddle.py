@@ -27,7 +27,6 @@ os.environ["PPOCR_HOME"] = PADDLE_OCR_PATH
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 if PADDLE_OCR_AVAILABLE:
-
     @register_OCR("paddle_ocr")
     class PaddleOCRModule(OCRBase):
         # Mapping language names to PaddleOCR codes
