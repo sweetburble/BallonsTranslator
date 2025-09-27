@@ -4,7 +4,7 @@ from typing import List, Dict, Union
 import yaml
 import traceback
 
-from openai import OpenAI # 변경: google.generativeai -> openai
+from openai import OpenAI
 from .base import BaseTranslator, register_translator
 
 from .sys_prompt import get_system_prompt
@@ -21,7 +21,7 @@ class DeepseekTranslator(BaseTranslator):
         'api key': '',
         'prompt template': {
             'type': 'editor',
-            'value': 'Please help me to translate the following text from a manga to {to_lang} (if it\'s already in {to_lang} or looks like gibberish you have to output it as it is instead):\n',
+            'value': 'Translate This:\n',
         },
         'chat sample': { 
             'type': 'editor',
@@ -35,7 +35,7 @@ class DeepseekTranslator(BaseTranslator):
         - 喜多ちゃんとは どどど どういった ご関係なのでしようか...
         - テレビで見た！
     target:
-        - 둘의 키스를 목격한 혼자 있는 아이
+        - 둘의 키스를 목격한 봇치쨩
         - 두 분
         - 좋아하는 친구에게는 인사 대신에 뽀뽀를 한다고 해.
         - 아이스크림을 줬어.
