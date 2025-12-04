@@ -46,7 +46,7 @@ class DeepseekTranslator(BaseTranslator):
         'max requests per minute': 20,
         'delay': 0.3,
         'max tokens': 4096,
-        'temperature': 0.5,
+        'temperature': 1.2,
         'top p': 1,
         # 'return prompt': False,
         'retry attempts': 5,

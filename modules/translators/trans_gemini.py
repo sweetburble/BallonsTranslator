@@ -25,7 +25,7 @@ class GeminiTranslator(BaseTranslator):
             'options': [
                 'gemini-flash-lite-latest',
                 'gemini-flash-latest',
-                'gemini-2.5-pro'
+                'gemini-3-pro-preview'
             ],
             'value': 'gemini-flash-lite-latest'
         },
@@ -292,8 +292,8 @@ class GeminiTranslator(BaseTranslator):
         try:
             response = client.models.generate_content(model=model_name, contents=contents, config=config)
 
-            return response.text
+            return response.candidates[0].content.parts[0].text
         except Exception as e:
             self.logger.error(f"Gemini API request error: {e}")
-            self.logger.error(f'Request traceback: %s', traceback.format_exc()) # 변경: TypeError 해결을 위해 format string 변경
+            self.logger.error(f'Request traceback: {traceback.format_exc()}')
             raise e

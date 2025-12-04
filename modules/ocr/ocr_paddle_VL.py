@@ -15,13 +15,13 @@ class OCRPaddleVL(OCRBase):
         'server_url': 'http://127.0.0.1:8080/layout-parsing',
         'prettifyMarkdown': {'type': 'checkbox', 'value': False},
         'visualize': {'type': 'checkbox', 'value': False},
-        'description': '本地部署的 Paddle OCR-VL 服务 (POST /layout-parsing)'
+        'description': '로컬에 배포된 Paddle OCR-VL 서비스 (POST /layout-parsing)'
     }
 
     @property
     def server_url(self):
         val = self.params.get('server_url')
-        # UI may wrap param as a dict like {'value': 'http://...', 'data_type': <class 'str'>}
+        # UI가 파라미터를 {'value': 'http://...', 'data_type': <class 'str'>}와 같은 딕셔너리로 감쌀 수 있음
         if isinstance(val, dict):
             return val.get('value') or val.get('text') or ''
         return val or ''
@@ -46,8 +46,8 @@ class OCRPaddleVL(OCRBase):
 
     def _ocr_blk_list(self, img: np.ndarray, blk_list: List[TextBlock], *args, **kwargs):
         """
-        对每个文本块单独裁剪并调用本地 Paddle-VL 服务识别。
-        这样可以与现有的块级工作流兼容（保持 TextBlock API）。
+        각 텍스트 블록을 개별적으로 크롭하여 로컬 Paddle-VL 서비스를 호출하여 인식합니다.
+        이렇게 하면 기존 블록 수준 워크플로우와 호환됩니다 (TextBlock API 유지).
         """
         im_h, im_w = img.shape[:2]
         for blk in blk_list:
@@ -57,7 +57,7 @@ class OCRPaddleVL(OCRBase):
                     crop = img[y1:y2, x1:x2]
                     blk.text = self.ocr(crop)
                 except Exception as e:
-                    self.logger.exception('Paddle-VL 块级识别失败')
+                    self.logger.exception('Paddle-VL 블록 수준 인식 실패')
                     blk.text = ['']
             else:
                 self.logger.warning('invalid textbbox to target img')
@@ -74,7 +74,7 @@ class OCRPaddleVL(OCRBase):
             if node is None:
                 return
             if isinstance(node, dict):
-                # common keys may include 'texts' or 'text'
+                # 일반적인 키에는 'texts' 또는 'text'가 포함될 수 있음
                 if 'texts' in node and isinstance(node['texts'], (list, str)):
                     if isinstance(node['texts'], list):
                         texts.append(''.join(node['texts']).strip())
@@ -91,38 +91,38 @@ class OCRPaddleVL(OCRBase):
                 texts.append(node.strip())
 
         walk(pruned)
-        # filter empties and deduplicate nearby
+        # 빈 문자열 필터링 및 인접 중복 제거
         return [t for t in texts if t]
 
     def _markdown_to_text(self, md: str) -> str:
         """
-        简单地把 Markdown 转换为纯文本：
-        - 移除图片语法 ![...](...)
-        - 把链接 [text](url) -> text
-        - 移除标题前导的 #
-        - 移除强调符号 (*, _, **)
-        - 移除行内代码和 HTML 标签
-        - 合并连续空行并去除前后空白
+        Markdown을 간단히 일반 텍스트로 변환:
+        - 이미지 구문 제거 ![...](...)
+        - 링크 [text](url) -> text로 변환
+        - 제목 앞의 # 제거
+        - 강조 기호 제거 (*, _, **)
+        - 인라인 코드 및 HTML 태그 제거
+        - 연속된 빈 줄 병합 및 앞뒤 공백 제거
         """
         if not md:
             return ''
         try:
             import re
 
-            # remove image markdown
+            # 이미지 마크다운 제거
             md = re.sub(r'!\[[^\]]*\]\([^\)]*\)', '', md)
-            # replace links [text](url) -> text
+            # 링크 [text](url) -> text로 변환
             md = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', md)
-            # remove heading markers at line starts
+            # 줄 시작의 제목 마커 제거
             md = re.sub(r'(?m)^\s{0,3}#{1,6}\s*', '', md)
-            # remove bold/italic markers (*, _, **, __)
+            # 굵게/기울임 마커 제거 (*, _, **, __)
             md = re.sub(r'(\*\*|__)(.*?)\1', r'\2', md)
             md = re.sub(r'(\*|_)(.*?)\1', r'\2', md)
-            # remove inline code backticks
+            # 인라인 코드 백틱 제거
             md = re.sub(r'`([^`]*)`', r'\1', md)
-            # remove any remaining html tags
+            # 남아있는 HTML 태그 제거
             md = re.sub(r'<[^>]+>', '', md)
-            # normalize whitespace and remove multiple blank lines
+            # 공백 정규화 및 여러 빈 줄 제거
             md = re.sub(r"\r\n|\r", "\n", md)
             md = re.sub(r"\n{2,}", "\n", md)
             md = md.strip()
@@ -132,14 +132,14 @@ class OCRPaddleVL(OCRBase):
 
     def ocr(self, img: np.ndarray) -> str:
         """
-        将图片（单张或块）以 Base64 发送到本地 Paddle-VL 服务的 `/layout-parsing`。
-        优先使用返回的 Markdown 文本；若无，则尝试从 prunedResult 中抽取文本。
-        返回字符串（整块识别结果）。
+        이미지(단일 또는 블록)를 Base64로 로컬 Paddle-VL 서비스의 `/layout-parsing`에 전송합니다.
+        반환된 Markdown 텍스트를 우선 사용하며, 없으면 prunedResult에서 텍스트를 추출하려고 시도합니다.
+        문자열을 반환합니다 (전체 블록 인식 결과).
         """
         try:
             image_bytes = cv2.imencode('.jpg', img)[1].tobytes()
         except Exception as e:
-            self.logger.exception('图片编码失败')
+            self.logger.exception('이미지 인코딩 실패')
             raise
 
         image_b64 = base64.b64encode(image_bytes).decode('ascii')
@@ -154,55 +154,55 @@ class OCRPaddleVL(OCRBase):
         try:
             resp = requests.post(self.server_url, json=payload, timeout=60)
         except Exception as e:
-            self.logger.exception('请求本地 Paddle-VL 服务失败')
+            self.logger.exception('로컬 Paddle-VL 서비스 요청 실패')
             raise
 
         if resp.status_code != 200:
-            self.logger.error(f'Paddle-VL 请求失败，状态码：{resp.status_code}')
-            raise ValueError(f'Paddle-VL 请求失败，状态码：{resp.status_code}')
+            self.logger.error(f'Paddle-VL 요청 실패, 상태 코드: {resp.status_code}')
+            raise ValueError(f'Paddle-VL 요청 실패, 상태 코드: {resp.status_code}')
 
         try:
             data = resp.json()
         except Exception:
-            self.logger.exception('Paddle-VL 响应解析 JSON 失败')
+            self.logger.exception('Paddle-VL 응답 JSON 파싱 실패')
             raise
 
-        # Paddle 服务标准返回: { logId, errorCode, errorMsg, result }
+        # Paddle 서비스 표준 응답: { logId, errorCode, errorMsg, result }
         if 'errorCode' in data and data.get('errorCode', -1) != 0:
             msg = data.get('errorMsg', '')
-            self.logger.error(f'Paddle-VL 返回错误：{msg}')
-            raise ValueError(f'Paddle-VL 返回错误：{msg}')
+            self.logger.error(f'Paddle-VL 오류 반환: {msg}')
+            raise ValueError(f'Paddle-VL 오류 반환: {msg}')
 
         result = data.get('result', data)
         lprs = result.get('layoutParsingResults') or []
         if not lprs:
-            # 没有 layoutParsingResults，则尝试直接从 result 中解析
-            # 最后退回到将整个响应以字符串返回（用于调试）
-            self.logger.debug('未找到 layoutParsingResults，返回完整响应文本')
+            # layoutParsingResults가 없으면 result에서 직접 파싱을 시도합니다
+            # 마지막으로 전체 응답을 문자열로 반환합니다 (디버그용)
+            self.logger.debug('layoutParsingResults를 찾을 수 없음, 전체 응답 텍스트 반환')
             return json.dumps(result, ensure_ascii=False)
 
         first = lprs[0]
-        # 优先使用 Markdown，但把 Markdown 清理为纯文本
+        # Markdown을 우선 사용하되, Markdown을 일반 텍스트로 정리합니다
         md_raw = first.get('markdown', {}).get('text') if isinstance(first.get('markdown'), dict) else None
         if md_raw:
             md_txt = self._markdown_to_text(md_raw)
             if md_txt:
                 return md_txt
 
-        # 否则尝试从 prunedResult 中抽取 texts 字段
+        # 그렇지 않으면 prunedResult에서 texts 필드를 추출하려고 시도합니다
         pruned = first.get('prunedResult')
         if pruned is not None:
             texts = self._extract_texts_from_pruned(pruned)
             if texts:
-                # join and clean result to remove any possible markdown artifacts
+                # 결과를 결합하고 정리하여 가능한 마크다운 아티팩트를 제거합니다
                 joined = '\n'.join(texts)
                 return self._markdown_to_text(joined)
 
-        # 最后退回到 outputImages 或 pruned 的 JSON 字符串
+        # 마지막으로 outputImages 또는 pruned의 JSON 문자열로 되돌립니다
         return json.dumps(first, ensure_ascii=False)
 
     def updateParam(self, param_key: str, param_content):
         super().updateParam(param_key, param_content)
-        # 当 server_url 等参数变动时，提示用户
+        # server_url 등의 파라미터가 변경될 때 사용자에게 알립니다
         if param_key == 'server_url':
-            create_info_dialog('Paddle-VL 服务地址已更新')
+            create_info_dialog('Paddle-VL 서비스 주소가 업데이트되었습니다')

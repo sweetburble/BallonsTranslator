@@ -2,8 +2,6 @@ import logging
 from typing import List
 import numpy as np
 
-# Ballons Translator 프로젝트의 기본 클래스 및 유틸리티를 임포트합니다.
-# 경로가 다른 경우 실제 프로젝트 구조에 맞게 수정해주세요.
 from .base import register_OCR, OCRBase, TextBlock
 
 # 로거 설정
