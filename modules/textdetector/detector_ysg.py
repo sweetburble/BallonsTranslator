@@ -23,7 +23,6 @@ def update_ckpt_list():
         if p.startswith('ysgyolo') or p.startswith('ultralyticsyolo'):
             CKPT_LIST.append(osp.join(MODEL_DIR, p).replace('\\', '/'))
 
-
 update_ckpt_list()
 
 @register_textdetectors('ysgyolo')
@@ -38,32 +37,32 @@ class YSGYoloDetector(TextDetectorBase):
             'path_selector': True,
             'path_filter': '*.pt *.ckpt *.pth *.safetensors',
             'size': 'median',
-            'display_name': '模型路径'
+            'display_name': '모델 경로'
         },
         'merge text lines': {
-            'display_name': '合并文本行', 'type': 'checkbox', 'value': True
+            'display_name': '텍스트 라인 병합', 'type': 'checkbox', 'value': True
         },
         'confidence threshold': {
-            'display_name': '置信度阈值', 'type': 'line_editor', 'value': 0.3
+            'display_name': '신뢰도 임계값', 'type': 'line_editor', 'value': 0.3
         },
         'IoU threshold': {
-            'display_name': 'IoU阈值', 'type': 'line_editor', 'value': 0.5
+            'display_name': 'IoU 임계값', 'type': 'line_editor', 'value': 0.5
         },
         'font size multiplier': {
-            'display_name': '字号乘数', 'type': 'line_editor', 'value': 1.
+            'display_name': '글꼴 크기 배율', 'type': 'line_editor', 'value': 1.
         },
         'font size max': {
-            'display_name': '最大字号', 'type': 'line_editor', 'value': -1
+            'display_name': '최대 글꼴 크기', 'type': 'line_editor', 'value': -1
         },
         'font size min': {
-            'display_name': '最小字号', 'type': 'line_editor', 'value': -1
+            'display_name': '최소 글꼴 크기', 'type': 'line_editor', 'value': -1
         },
         'detect size': {
-            'display_name': '检测尺寸', 'type': 'line_editor', 'value': 1024
+            'display_name': '감지 크기', 'type': 'line_editor', 'value': 1024
         },
         'device': {
             **DEVICE_SELECTOR(),
-            'display_name': '设备'
+            'display_name': '장치'
         },
         'label': {
             'value': {
@@ -75,13 +74,13 @@ class YSGYoloDetector(TextDetectorBase):
                 'other': True
             },
             'type': 'check_group',
-            'display_name': '标签'
+            'display_name': '레이블'
         },
         'source text is vertical': {
-            'display_name': '竖排文本', 'type': 'checkbox', 'value': True
+            'display_name': '세로쓰기 텍스트', 'type': 'checkbox', 'value': True
         },
         'mask dilate size': {
-            'display_name': '掩码扩张尺寸', 'type': 'line_editor', 'value': 2
+            'display_name': '마스크 팽창 크기', 'type': 'line_editor', 'value': 2
         }
     }
 
@@ -100,7 +99,7 @@ class YSGYoloDetector(TextDetectorBase):
                 if osp.exists(p):
                     df_model_path = p
                     break
-            self.logger.warning(f'{model_path} does not exist, try fall back to default value {df_model_path}')
+            self.logger.warning(f'{model_path}가 존재하지 않습니다. 기본값 {df_model_path}로 대체 시도합니다.')
             model_path = df_model_path
 
         if 'rtdetr' in os.path.basename(model_path):
@@ -134,7 +133,7 @@ class YSGYoloDetector(TextDetectorBase):
         im_h, im_w = img.shape[:2]
         detected_items = []
 
-        # Process standard boxes
+        # 일반 바운딩 박스 처리
         dets = result.boxes
         if dets is not None and len(dets.cls) > 0:
             for i in range(len(dets.cls)):
@@ -148,7 +147,7 @@ class YSGYoloDetector(TextDetectorBase):
                     pts = xywh2xyxypoly(np.array([[x1, y1, x2 - x1, y2 - y1]])).reshape(4, 2).tolist()
                     detected_items.append({'pts': pts, 'label': label_name})
 
-        # Process oriented boxes
+        # 회전된 바운딩 박스 처리
         dets = result.obb
         if dets is not None and len(dets.cls) > 0:
             for i in range(len(dets.cls)):
@@ -165,7 +164,6 @@ class YSGYoloDetector(TextDetectorBase):
             blk_list = mit_merge_textlines(pts_only_list, width=im_w, height=im_h)
         else:
             for item in detected_items:
-
                 pts_sorted, is_vertical = sort_pnts(item['pts'])
                 blk = TextBlock(lines=[pts_sorted], src_is_vertical=is_vertical, label=item['label'])
                 blk.vertical = is_vertical
