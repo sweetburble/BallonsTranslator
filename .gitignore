@@ -64,3 +64,8 @@ Ultralytics/settings.json
 modules/translators/sys_prompt.py
 temp
 테스트 결과.txt
+uv.lock
+temp.py
+pyproject.toml
+\[MY] README.md
+.python-version
