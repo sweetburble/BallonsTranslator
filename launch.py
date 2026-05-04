@@ -37,8 +37,10 @@ if IS_WIN7:
 else:
     parser.add_argument("--qt-api", default='pyqt6', choices=QT_APIS, help='Set qt api')
 parser.add_argument("--debug", action='store_true')
+parser.add_argument("--system_hf_cache", action='store_true', help="use system huggingface cache directory instead of ./data/models")
 parser.add_argument("--requirements", default='requirements.txt')
 parser.add_argument("--headless", action='store_true', help='run without GUI')
+parser.add_argument("--headless_continuous", action='store_true', help='like headless but will not exit after finishing translation, prompts the user for new exec_dirs until user exits the program')
 parser.add_argument("--exec_dirs", default='', help='translation queue (project directories) separated by comma')
 parser.add_argument("--ldpi", default=None, type=float, help='logical dots perinch')
 parser.add_argument("--export-translation-txt", action='store_true', help='save translation to txt file once RUN completed')
@@ -132,6 +134,7 @@ def main():
         os.environ['BALLOONTRANS_DEBUG'] = '1'
 
     os.environ['QT_API'] = args.qt_api
+    os.environ['HF_HUB_ENABLE_HF_TRANSFER'] = '1'
 
     commit = commit_hash()
 
@@ -143,6 +146,9 @@ def main():
 
     APP_DIR = os.path.dirname(os.path.abspath(__file__))
     os.chdir(APP_DIR)
+
+    if not args.system_hf_cache:
+        os.environ['HF_HOME'] = osp.join(APP_DIR, 'data/models')
 
     prepare_environment()
 
@@ -180,11 +186,12 @@ def main():
     shared.args = args
     shared.DEFAULT_DISPLAY_LANG = QLocale.system().name().replace('en_CN', 'zh_CN')
     shared.HEADLESS = args.headless
+    shared.HEADLESS_CONTINUOUS = args.headless_continuous
     shared.load_cache()
     program_config.load_config(args.config_path)
     config = program_config.pcfg
 
-    if args.headless:
+    if args.headless or args.headless_continuous:
         config.module.load_model_on_demand = True
         config.module.empty_runcache = False
 
@@ -215,7 +222,7 @@ def main():
     setup_logging(shared.LOGGING_PATH)
 
     app_args = sys.argv
-    if args.headless:
+    if args.headless or args.headless_continuous:
         app_args = sys.argv + ['-platform', 'offscreen']
     app = QApplication(app_args)
     app.setApplicationName('BalloonsTranslator')
@@ -228,7 +235,7 @@ def main():
     init_module_registries()
     prepare_local_files_forall()
 
-    if not args.headless:
+    if not args.headless and not args.headless_continuous:
         ps = QGuiApplication.primaryScreen()
         shared.LDPI = ps.logicalDotsPerInch()
         shared.SCREEN_W = ps.geometry().width()
@@ -252,7 +259,7 @@ def main():
             if fnt_idx >= 0:
                 shared.CUSTOM_FONTS.append(QFontDatabase.applicationFontFamilies(fnt_idx)[0])
 
-    if sys.platform == 'win32' and args.headless:
+    if sys.platform == 'win32' and (args.headless or args.headless_continuous):
         # font database does not initialise on windows with qpa -offscreen:
         # whttps://github.com/dmMaze/BallonsTranslator/issues/519
         from qtpy.QtCore import QStandardPaths
@@ -288,7 +295,7 @@ def main():
     BT = ballontrans
     BT.restart_signal.connect(restart)
 
-    if not args.headless:
+    if not args.headless and not args.headless_continuous:
         if shared.SCREEN_W > 1707 and sys.platform == 'win32':   # higher than 2560 (1440p) / 1.5
             # https://github.com/dmMaze/BallonsTranslator/issues/220
             BT.comicTransSplitter.setHandleWidth(7)
@@ -362,15 +369,15 @@ def prepare_environment():
                 Exception("No AMD Nightly GPU supported")
             if amd_nightly_gpu == "RDNA3":
                 torch_command = os.environ.get('TORCH_COMMAND',
-                                               "pip install rocm==7.0.0rc20250818 rocm-sdk-core==7.0.0rc20250818 rocm-sdk-libraries-gfx110X-dgpu==7.0.0rc20250818 torch==2.9.0a0+rocm7.0.0rc20250818 torchvision==0.24.0a0+rocm7.0.0rc20250818 --index-url https://d2awnip2yjpvqn.cloudfront.net/v2/gfx110X-dgpu/ intel-openmp==2025.1.1 --extra-index-url https://pypi.org/simple --disable-pip-version-check")
+                                               "pip install https://repo.radeon.com/rocm/windows/rocm-rel-6.4.4/torch-2.8.0a0%2Bgitfc14c65-cp312-cp312-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-6.4.4/torchvision-0.24.0a0%2Bc85f008-cp312-cp312-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-6.4.4/torchaudio-2.6.0a0%2B1a8f621-cp312-cp312-win_amd64.whl")
             if amd_nightly_gpu == "RDNA4":
                 torch_command = os.environ.get('TORCH_COMMAND',
-                                               "pip install rocm==7.0.0rc20250817 rocm-sdk-core==7.0.0rc20250817 rocm-sdk-libraries-gfx120X-all==7.0.0rc20250817 torch==2.9.0a0+rocm7.0.0rc20250817 torchvision==0.24.0a0+rocm7.0.0rc20250817 --index-url https://d2awnip2yjpvqn.cloudfront.net/v2/gfx120X-all/ intel-openmp==2025.1.1 --extra-index-url https://pypi.org/simple --disable-pip-version-check")
+                                               "pip install https://repo.radeon.com/rocm/windows/rocm-rel-6.4.4/torch-2.8.0a0%2Bgitfc14c65-cp312-cp312-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-6.4.4/torchvision-0.24.0a0%2Bc85f008-cp312-cp312-win_amd64.whl https://repo.radeon.com/rocm/windows/rocm-rel-6.4.4/torchaudio-2.6.0a0%2B1a8f621-cp312-cp312-win_amd64.whl")
         else:
             # AMD GPU: Cuda 11.8, Pytorch 2.2.2
             torch_command = os.environ.get('TORCH_COMMAND', "pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu118 --disable-pip-version-check")
     else:
-        torch_command = os.environ.get('TORCH_COMMAND', "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 --disable-pip-version-check")
+        torch_command = os.environ.get('TORCH_COMMAND', "pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu118 --disable-pip-version-check")
     if args.reinstall_torch or not is_installed("torch") or not is_installed("torchvision"):
         run(f'"{python}" -m {torch_command}', "Installing torch and torchvision", "Couldn't install torch", live=True)
         req_updated = True

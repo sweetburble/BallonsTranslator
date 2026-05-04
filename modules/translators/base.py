@@ -11,6 +11,7 @@ from utils.registry import Registry
 from utils.io_utils import text_is_empty
 from utils.logger import logger as LOGGER
 
+
 TRANSLATORS = Registry('translators')
 register_translator = TRANSLATORS.register_module
 
@@ -72,6 +73,7 @@ def check_language_support(check_type: str = 'source'):
 class BaseTranslator(BaseModule):
     concate_text = True
     cht_require_convert = False
+    translate_by_textblock = False
 
     _postprocess_hooks = OrderedDict()
     _preprocess_hooks = OrderedDict()
@@ -140,7 +142,7 @@ class BaseTranslator(BaseModule):
             return text
 
         is_list = isinstance(text, List)
-        concate_text = is_list and self.concate_text
+        concate_text = is_list and self.concate_text and not self.translate_by_textblock
         text_source = self.textlist2text(text) if concate_text else text
         
         src_is_list = isinstance(text_source, List)
